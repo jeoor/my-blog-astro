@@ -1,0 +1,106 @@
+---
+export interface Props {
+  postId: string
+  endpoint?: string
+  reactions?: Array<{ key: string; emoji: string; name?: string }>
+  uiText?: {
+    pickerTitle?: string
+    missingBackendHint?: string
+  }
+  showMissingBackendHint?: boolean
+}
+
+const {
+  postId,
+  endpoint: endpointProp,
+  reactions = [
+    { key: 'like', emoji: '👍', name: '赞' },
+    { key: 'dislike', emoji: '👎', name: '踩' },
+    { key: 'laugh', emoji: '😄', name: '开心' },
+    { key: 'hooray', emoji: '🎉', name: '庆祝' },
+    { key: 'confused', emoji: '😕', name: '困惑' },
+    { key: 'heart', emoji: '❤️', name: '喜欢' },
+    { key: 'rocket', emoji: '🚀', name: '火箭' },
+    { key: 'eyes', emoji: '👀', name: '围观' },
+  ],
+  uiText,
+  showMissingBackendHint = true,
+} = Astro.props
+
+const endpoint = endpointProp ?? import.meta.env.PUBLIC_REACTIONS_ENDPOINT
+
+const pickerTitle = uiText?.pickerTitle || '选择表情'
+const missingBackendHint =
+  uiText?.missingBackendHint ||
+  '未配置表情后端：请在 site.config.ts 的 likes.endpoint 填入你的 Worker 地址。'
+---
+
+<section aria-label="表情反应">
+  <div
+    class="relative"
+    data-reactions-root
+    data-post-id={postId}
+    data-reactions-endpoint={endpoint}
+    data-reactions-ui={JSON.stringify({ ...uiText, pickerTitle })}>
+    <div class="flex flex-wrap items-center justify-center gap-2">
+      <div class="relative">
+        <button
+          type="button"
+          class="inline-flex items-center justify-center rounded-full border-1 border-foreground/10 bg-background/70 size-9 hover:bg-foreground/4 hover:border-foreground/14 active:bg-foreground/6 transition-colors"
+          aria-label={pickerTitle}
+          aria-haspopup="menu"
+          aria-expanded="false"
+          data-reactions-trigger>
+          <span aria-hidden="true" class="text-base leading-none">🙂</span>
+        </button>
+
+        <div
+          class="hidden absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-fit rounded-xl border-1 border-foreground/10 bg-background/95 backdrop-blur shadow-md"
+          role="menu"
+          aria-label={pickerTitle}
+          data-reactions-menu>
+          <div
+            class="px-2 py-1.5 text-sm text-foreground/80 select-none whitespace-nowrap"
+            data-reactions-title
+            data-default-title={pickerTitle}>
+            {pickerTitle}
+          </div>
+          <div class="h-px bg-foreground/6"></div>
+          <div class="p-1.5 grid w-fit mx-auto grid-cols-[repeat(4,auto)] gap-1.5">
+            {
+              reactions.map((r) => (
+                <button
+                  type="button"
+                  class="inline-flex items-center justify-center size-9 rounded-md border-1 border-transparent bg-transparent origin-center will-change-transform transition-transform duration-150 ease-out hover:scale-125 active:scale-110 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-foreground/14 disabled:cursor-not-allowed disabled:opacity-100 disabled:border-accent/25 disabled:bg-accent/8 disabled:hover:scale-100 disabled:active:scale-100"
+                  role="menuitem"
+                  data-reaction={r.key}
+                  data-emoji={r.emoji}
+                  data-name={r.name}
+                  aria-label={`选择表情：${r.key}`}>
+                  <span aria-hidden="true" class="text-lg leading-none">
+                    {r.emoji}
+                  </span>
+                </button>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2" data-reactions-list></div>
+
+      <span class="ml-2 text-xs text-foreground/60" data-status></span>
+    </div>
+  </div>
+
+  {
+    !endpoint && showMissingBackendHint && (
+      <p class="mt-2 text-xs text-foreground/60">{missingBackendHint}</p>
+    )
+  }
+</section>
+
+<script>
+  import { initReactions } from '~/scripts/reactions'
+  initReactions()
+</script>

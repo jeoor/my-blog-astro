@@ -1,0 +1,81 @@
+---
+import Layout from '~/layouts/Layout.astro'
+import PageHeader from '~/components/PageHeader.astro'
+import MasonryGallery from '~/components/MasonryGallery.astro'
+import type { ImageMetadata } from 'astro'
+
+function getAlbumKeyFromPath(path: string): string {
+  const rel = path.replace('../../gallery/', '')
+  const parts = rel.split('/').filter(Boolean)
+  return parts.length >= 2 ? parts[0] : 'default'
+}
+
+export const getStaticPaths = async () => {
+  const modules = import.meta.glob('../../gallery/**/*.{png,jpg,jpeg,webp,avif}', {
+    eager: true,
+  })
+
+  const albums = new Set<string>()
+  for (const path of Object.keys(modules)) {
+    const rel = path.replace('../../gallery/', '')
+    const parts = rel.split('/').filter(Boolean)
+    const album = parts.length >= 2 ? parts[0] : 'default'
+    albums.add(album)
+  }
+
+  return Array.from(albums).map((album) => ({
+    params: { album },
+  }))
+}
+
+const { album } = Astro.params as { album: string }
+
+const modules = import.meta.glob<{ default: ImageMetadata }>(
+  '../../gallery/**/*.{png,jpg,jpeg,webp,avif}',
+  { eager: true },
+)
+
+function getAltFromPath(path: string): string {
+  const fileName = path.split('/').pop() ?? ''
+  const baseName = fileName.replace(/\.[^.]+$/, '')
+  return decodeURIComponent(baseName).replace(/[-_]+/g, ' ').trim() || '图片'
+}
+
+const items = Object.entries(modules)
+  .filter(([path]) => getAlbumKeyFromPath(path) === album)
+  .map(([path, mod]) => ({ image: mod.default, alt: getAltFromPath(path) }))
+  .sort((a, b) => a.alt.localeCompare(b.alt, 'zh-CN'))
+
+const displayName = album === 'default' ? '默认' : decodeURIComponent(album)
+const pageTitle = `图库 - ${displayName}`
+---
+
+<Layout title={pageTitle} description="瀑布流图片图库">
+  <PageHeader />
+
+  <section class="md:mx-2 mt-5">
+    {
+      items.length === 0 ? (
+        <div class="prose">
+          <p>这个相册还没有图片。</p>
+          <p>
+            把图片放到 <code>src/gallery/{album}</code>（或根目录 <code>src/gallery</code>{' '}
+            对应默认相册）。
+          </p>
+          <p>
+            <a href="/gallery">返回相册列表</a>
+          </p>
+        </div>
+      ) : (
+        <>
+          <div class="prose mb-4">
+            <p>
+              相册：<strong>{displayName}</strong>（{items.length} 张）
+            </p>
+          </div>
+          <MasonryGallery items={items} fancyboxGroup={`gallery-${album}`} />
+        </>
+      )
+    }
+  </section>
+</Layout>

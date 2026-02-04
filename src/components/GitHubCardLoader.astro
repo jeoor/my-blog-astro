@@ -1,0 +1,294 @@
+---
+import siteConfig from '~/site.config'
+
+const githubCardsCfg = siteConfig.githubCards ?? {}
+const enabled = githubCardsCfg.enabled !== false
+const mode = githubCardsCfg.mode ?? 'client'
+
+const apiBase = (githubCardsCfg.apiBase || 'https://api.github.com').replace(/\/$/, '')
+const cacheTtlMs = githubCardsCfg.cacheTtlMs ?? 1000 * 60 * 60 * 24
+---
+
+{enabled && mode !== 'build' && (
+  <>
+    <div
+      id="github-cards-config"
+      data-api-base={apiBase}
+      data-cache-ttl-ms={cacheTtlMs.toString()}></div>
+    <script is:inline>
+      ;(() => {
+        const cfgEl = document.getElementById('github-cards-config')
+        if (!cfgEl) return
+
+        const apiBase = (cfgEl.getAttribute('data-api-base') || 'https://api.github.com').replace(
+          /\/$/,
+          '',
+        )
+        const cacheTtlMs = Number(cfgEl.getAttribute('data-cache-ttl-ms') || '86400000')
+
+        const inflight = new Map()
+
+        const formatCompact = (value) => {
+          if (typeof value !== 'number' || !Number.isFinite(value)) return ''
+          return Intl.NumberFormat(undefined, {
+            notation: 'compact',
+            maximumFractionDigits: 1,
+          })
+            .format(value)
+            .replaceAll('\u202f', '')
+        }
+
+        const cleanDescription = (value) => {
+          if (typeof value !== 'string') return ''
+          return value.replace(/:[a-zA-Z0-9_]+:/g, '').trim()
+        }
+
+        const cacheKey = (type, slug) => `ghcard:v1:${type}:${slug}`
+
+        const getCached = (type, slug) => {
+          try {
+            const raw = localStorage.getItem(cacheKey(type, slug))
+            if (!raw) return null
+            const parsed = JSON.parse(raw)
+            if (!parsed || typeof parsed !== 'object') return null
+            if (typeof parsed.ts !== 'number' || !parsed.data) return null
+            if (Date.now() - parsed.ts > cacheTtlMs) return null
+            return parsed.data
+          } catch {
+            return null
+          }
+        }
+
+        const setCached = (type, slug, data) => {
+          try {
+            localStorage.setItem(
+              cacheKey(type, slug),
+              JSON.stringify({ ts: Date.now(), data }),
+            )
+          } catch {
+            // Ignore quota errors.
+          }
+        }
+
+        const fetchJson = async (url, timeoutMs = 8000) => {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+          try {
+            const res = await fetch(url, {
+              headers: {
+                Accept: 'application/vnd.github+json',
+              },
+              signal: controller.signal,
+            })
+            if (!res.ok) return null
+            return await res.json()
+          } catch {
+            return null
+          } finally {
+            clearTimeout(timeoutId)
+          }
+        }
+
+        const fetchGithub = async (type, slug) => {
+          const cached = getCached(type, slug)
+          if (cached) return cached
+
+          const key = `${type}:${slug}`
+          if (inflight.has(key)) return await inflight.get(key)
+
+          const promise = (async () => {
+            const path = type === 'repo' ? `/repos/${slug}` : `/users/${slug}`
+            const data = await fetchJson(`${apiBase}${path}`)
+            if (data) setCached(type, slug, data)
+            return data
+          })()
+
+          inflight.set(key, promise)
+          try {
+            return await promise
+          } finally {
+            inflight.delete(key)
+          }
+        }
+
+        const ensureChild = (parent, selector, tagName, className) => {
+          let el = parent.querySelector(selector)
+          if (el) return el
+          el = document.createElement(tagName)
+          if (className) el.className = className
+          parent.appendChild(el)
+          return el
+        }
+
+        const ensureTitleRow = (card) => {
+          const title = ensureChild(card, '.gh-title', 'div', 'gh-title')
+          const link = title.querySelector('a.gh-text')
+
+          let avatar = title.querySelector('.gh-avatar')
+          if (!avatar) {
+            avatar = document.createElement('span')
+            avatar.className = 'gh-avatar'
+            avatar.setAttribute('aria-hidden', 'true')
+            if (link) title.insertBefore(avatar, link)
+            else title.insertBefore(avatar, title.firstChild)
+          }
+
+          let icon = title.querySelector('.gh-icon')
+          if (!icon) {
+            icon = document.createElement('span')
+            icon.className = 'gh-icon'
+            icon.setAttribute('aria-hidden', 'true')
+            title.appendChild(icon)
+          }
+
+          return { title, link, avatar, icon }
+        }
+
+        const inferDirectiveData = (card) => {
+          const hasType = card.hasAttribute('data-gh-type')
+          const hasSlug = card.hasAttribute('data-gh-slug')
+          if (hasType && hasSlug) return
+
+          const link = card.querySelector('a.gh-text')
+          const href = link?.getAttribute('href')
+          if (!href) return
+
+          let url
+          try {
+            url = new URL(href, window.location.origin)
+          } catch {
+            return
+          }
+          if (url.hostname !== 'github.com') return
+
+          const slug = url.pathname.replace(/^\/+/, '').replace(/\/+$/, '')
+          if (!slug) return
+
+          const parts = slug.split('/').filter(Boolean)
+          if (parts.length === 1) {
+            card.setAttribute('data-gh-type', 'user')
+            card.setAttribute('data-gh-slug', parts[0])
+          } else if (parts.length >= 2) {
+            card.setAttribute('data-gh-type', 'repo')
+            card.setAttribute('data-gh-slug', `${parts[0]}/${parts[1]}`)
+          }
+
+          card.setAttribute('data-gh-url', `https://github.com/${slug}`)
+        }
+
+        const setTextAndShow = (el, text) => {
+          if (!el) return
+          if (!text) {
+            el.hidden = true
+            el.textContent = ''
+            return
+          }
+          el.textContent = text
+          el.hidden = false
+        }
+
+        const hydrateRepo = (card, data) => {
+          const { avatar } = ensureTitleRow(card)
+          const avatarUrl = data?.owner?.avatar_url
+          if (avatar && typeof avatarUrl === 'string' && avatarUrl) {
+            avatar.style.backgroundImage = `url('${avatarUrl}')`
+          }
+
+          const descriptionEl = ensureChild(card, '.gh-description', 'div', 'gh-description')
+          const description = cleanDescription(data?.description)
+          setTextAndShow(descriptionEl, description)
+
+          const chips = ensureChild(card, '.gh-chips', 'div', 'gh-chips')
+          chips.hidden = false
+
+          const starsEl = ensureChild(chips, '.gh-stars', 'span', 'gh-stars')
+          const forksEl = ensureChild(chips, '.gh-forks', 'span', 'gh-forks')
+          const licenseEl = ensureChild(chips, '.gh-license', 'span', 'gh-license')
+          const languageEl = ensureChild(chips, '.gh-language', 'span', 'gh-language')
+
+          setTextAndShow(starsEl, formatCompact(data?.stargazers_count))
+          setTextAndShow(forksEl, formatCompact(data?.forks))
+
+          const spdx = data?.license?.spdx_id
+          const license = typeof spdx === 'string' && spdx !== 'NOASSERTION' ? spdx : ''
+          setTextAndShow(licenseEl, license)
+
+          const language = typeof data?.language === 'string' ? data.language : ''
+          setTextAndShow(languageEl, language)
+
+          chips.hidden =
+            starsEl.hidden && forksEl.hidden && licenseEl.hidden && languageEl.hidden
+        }
+
+        const hydrateUser = (card, data) => {
+          const { avatar } = ensureTitleRow(card)
+          const avatarUrl = data?.avatar_url
+          if (avatar && typeof avatarUrl === 'string' && avatarUrl) {
+            avatar.style.backgroundImage = `url('${avatarUrl}')`
+          }
+
+          const chips = ensureChild(card, '.gh-chips', 'div', 'gh-chips')
+          chips.hidden = false
+
+          const followersEl = ensureChild(chips, '.gh-followers', 'span', 'gh-followers')
+          const reposEl = ensureChild(chips, '.gh-repositories', 'span', 'gh-repositories')
+          const regionEl = ensureChild(chips, '.gh-region', 'span', 'gh-region')
+
+          setTextAndShow(followersEl, formatCompact(data?.followers))
+          setTextAndShow(reposEl, formatCompact(data?.public_repos))
+
+          const region = typeof data?.location === 'string' ? data.location : ''
+          setTextAndShow(regionEl, region)
+
+          chips.hidden = followersEl.hidden && reposEl.hidden && regionEl.hidden
+        }
+
+        const hydrateCard = async (card) => {
+          if (card.dataset.ghHydrated === '1') return
+
+          inferDirectiveData(card)
+
+          const type = card.getAttribute('data-gh-type')
+          const slug = card.getAttribute('data-gh-slug')
+          if (!type || !slug) return
+
+          const data = await fetchGithub(type, slug)
+          if (!data) return
+
+          if (type === 'repo') hydrateRepo(card, data)
+          else if (type === 'user') hydrateUser(card, data)
+
+          card.dataset.ghHydrated = '1'
+        }
+
+        const start = () => {
+          const cards = Array.from(document.querySelectorAll('.github-card'))
+          if (cards.length < 1) return
+
+          if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver(
+              (entries) => {
+                for (const entry of entries) {
+                  if (!entry.isIntersecting) continue
+                  observer.unobserve(entry.target)
+                  hydrateCard(entry.target)
+                }
+              },
+              { rootMargin: '200px 0px' },
+            )
+
+            for (const card of cards) observer.observe(card)
+          } else {
+            for (const card of cards) hydrateCard(card)
+          }
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', start, { once: true })
+        } else {
+          start()
+        }
+      })()
+    </script>
+  </>
+)}

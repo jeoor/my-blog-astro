@@ -5,6 +5,7 @@ import IconMastodon from '~/icons/mastodon.svg'
 import IconTwitter from '~/icons/twitter.svg'
 import IconLinkedin from '~/icons/linkedin.svg'
 import IconBluesky from '~/icons/bluesky.svg'
+import IconBilibili from '~/icons/bilibili.svg'
 import IconEmail from '~/icons/email.svg'
 import IconRss from '~/icons/rss.svg'
 
@@ -22,8 +23,7 @@ const { socialLinks } = Astro.props
         href={socialLinks.github}
         target="_blank"
         rel="noopener noreferrer"
-        class="social-link"
-      >
+        class="social-link">
         <span class="sr-only">GitHub</span>
         <IconGithub class="size-7" />
       </a>
@@ -35,8 +35,7 @@ const { socialLinks } = Astro.props
         href={socialLinks.mastodon}
         target="_blank"
         rel="noopener noreferrer"
-        class="social-link"
-      >
+        class="social-link">
         <span class="sr-only">Mastodon</span>
         <IconMastodon class="size-7" />
       </a>
@@ -48,8 +47,7 @@ const { socialLinks } = Astro.props
         href={socialLinks.twitter}
         target="_blank"
         rel="noopener noreferrer"
-        class="social-link"
-      >
+        class="social-link">
         <span class="sr-only">Twitter</span>
         <IconTwitter class="size-7" />
       </a>
@@ -61,8 +59,7 @@ const { socialLinks } = Astro.props
         href={socialLinks.linkedin}
         target="_blank"
         rel="noopener noreferrer"
-        class="social-link"
-      >
+        class="social-link">
         <span class="sr-only">LinkedIn</span>
         <IconLinkedin class="size-7" />
       </a>
@@ -74,10 +71,21 @@ const { socialLinks } = Astro.props
         href={socialLinks.bluesky}
         target="_blank"
         rel="noopener noreferrer"
-        class="social-link"
-      >
+        class="social-link">
         <span class="sr-only">Bluesky</span>
         <IconBluesky class="size-7" />
+      </a>
+    )
+  }
+  {
+    socialLinks.bilibili && (
+      <a
+        href={socialLinks.bilibili}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="social-link">
+        <span class="sr-only">哔哩哔哩</span>
+        <IconBilibili class="size-7" />
       </a>
     )
   }
@@ -87,8 +95,7 @@ const { socialLinks } = Astro.props
         href={`mailto:${socialLinks.email}`}
         target="_blank"
         rel="noopener noreferrer"
-        class="social-link"
-      >
+        class="social-link">
         <span class="sr-only">Email</span>
         <IconEmail class="size-7" />
       </a>

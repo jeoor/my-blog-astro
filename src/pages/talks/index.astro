@@ -1,0 +1,44 @@
+---
+import Layout from '~/layouts/Layout.astro'
+import PageHeader from '~/components/PageHeader.astro'
+import Pagination from '~/components/Pagination.astro'
+import TalksList from '~/components/TalksList.astro'
+import siteConfig from '~/site.config'
+import { getCollection } from 'astro:content'
+
+const allEntries = (await getCollection('talks'))
+  .filter((e) => !e.data.draft)
+  .sort((a, b) => b.data.published.getTime() - a.data.published.getTime())
+
+const pageSize = siteConfig.pageSize
+const entries = allEntries.slice(0, pageSize)
+const totalPages = Math.ceil(allEntries.length / pageSize)
+const nextLink = totalPages > 1 ? '/talks/2' : undefined
+---
+
+<Layout title="说说" description="自言自语 / 碎碎念">
+  <PageHeader />
+
+  <section class="md:mx-2 mt-5">
+    <div class="prose mb-4">
+      <p>这里是一些随手记的碎碎念。</p>
+    </div>
+
+    {
+      entries.length === 0 ? (
+        <div class="prose">
+          <p>还没有内容。</p>
+          <p>
+            在 <code>src/content/talks</code> 新建 <code>.md</code>{' '}
+            文件就可以发布一条说说。
+          </p>
+        </div>
+      ) : (
+        <>
+          <TalksList entries={entries} offset={0} />
+          <Pagination nextLink={nextLink} nextText="较早的说说" />
+        </>
+      )
+    }
+  </section>
+</Layout>

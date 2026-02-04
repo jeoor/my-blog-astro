@@ -23,18 +23,18 @@ export const getStaticPaths = (async ({ paginate }) => {
 
 const { page, tagTitle } = Astro.props
 const pageTitle =
-  `Tag: ${tagTitle}` + (page.currentPage > 1 ? ` - Page ${page.currentPage}` : '')
+  `标签：${tagTitle}` + (page.currentPage > 1 ? ` - 第 ${page.currentPage} 页` : '')
 ---
 
-<Layout title={pageTitle} description={`All posts tagged with ${tagTitle}`}>
+<Layout title={pageTitle} description={`包含标签「${tagTitle}」的全部文章`}>
   <div class="mt-2 sm:mt-0">
     <PageHeader titlePieces={['tags', tagTitle]} />
     {page.data.map((post) => <PostPreview post={post} />)}
     <Pagination
       prevLink={page.url.prev ? encodeURI(page.url.prev) : undefined}
-      prevText="Newer Posts"
+      prevText="较新的文章"
       nextLink={page.url.next ? encodeURI(page.url.next) : undefined}
-      nextText="Older Posts"
+      nextText="较早的文章"
     />
   </div>
 </Layout>

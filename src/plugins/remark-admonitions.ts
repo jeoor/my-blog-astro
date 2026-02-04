@@ -25,6 +25,14 @@ const Admonitions = new Set<AdmonitionType>([
   'warning',
 ])
 
+const defaultAdmonitionTitles: Record<AdmonitionType, string> = {
+  tip: '提示',
+  note: '注意',
+  important: '重要',
+  caution: '当心',
+  warning: '警告',
+}
+
 /** Checks if a string is a supported admonition type. */
 function isAdmonition(s: string): s is AdmonitionType {
   return Admonitions.has(s as AdmonitionType)
@@ -37,7 +45,7 @@ export const remarkAdmonitions: Plugin<[], Root> = () => (tree) => {
     const admonitionType = node.name
     if (!isAdmonition(admonitionType)) return
 
-    let title: string = admonitionType
+    let title: string = defaultAdmonitionTitles[admonitionType]
     let titleNode: PhrasingContent[] = [{ type: 'text', value: title }]
 
     // Check if there's a custom title

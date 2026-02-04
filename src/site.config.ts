@@ -4,21 +4,20 @@ const config: SiteConfig = {
   // Absolute URL to the root of your published site, used for generating links and sitemaps.
   site: 'https://multiterm.stelclementine.com',
   // The name of your site, used in the title and for SEO.
-  title: 'MultiTerm',
+  title: "Kayro's blog",
   // The description of your site, used for SEO and RSS feed.
-  description:
-    'A coder-ready Astro blog theme with 59 of your favorite color schemes to choose from',
+  description: '敖苛的博客',
   // The author of the site, used in the footer, SEO, and RSS feed.
-  author: 'Katy Kookaburra',
+  author: '敖苛',
   // Keywords for SEO, used in the meta tags.
-  tags: ['Astro', 'Terminal', 'Theme', 'MultiTerm', 'stelcodes'],
+  tags: ['敖苛', '博客', 'Kayro', 'blog', '技术', '编程', '折腾'],
   // Path to the image used for generating social media previews.
   // Needs to be a square JPEG file due to limitations of the social card generator.
   // Try https://squoosh.app/ to easily convert images to JPEG.
-  socialCardAvatarImage: './src/content/avatar.jpg',
+  socialCardAvatarImage: '/avatar.jpg',
   // Font imported from @fontsource or elsewhere, used for the entire site.
   // To change this see src/styles/global.css and import a different font.
-  font: 'JetBrains Mono Variable',
+  font: '"JetBrains Mono Variable", "JetBrains Mono", "Sarasa Mono SC", "Noto Sans Mono CJK SC", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", "Hiragino Sans GB", "Noto Sans CJK SC", ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
   // For pagination, the number of posts to display per page.
   // The homepage will display half this number in the "Latest Posts" section.
   pageSize: 6,
@@ -29,20 +28,28 @@ const config: SiteConfig = {
   // The navigation links to display in the header.
   navLinks: [
     {
-      name: 'Home',
+      name: '首页',
       url: '/',
     },
     {
-      name: 'About',
+      name: '关于',
       url: '/about',
     },
     {
-      name: 'Archive',
+      name: '说说',
+      url: '/talks',
+    },
+    {
+      name: '图库',
+      url: '/gallery',
+    },
+    {
+      name: '归档',
       url: '/posts',
     },
     {
       name: 'GitHub',
-      url: 'https://github.com/stelcodes/multiterm-astro',
+      url: 'https://github.com/jeoor',
       external: true,
     },
   ],
@@ -152,12 +159,52 @@ const config: SiteConfig = {
   // Social links to display in the footer.
   socialLinks: {
     github: 'https://github.com/stelcodes/multiterm-astro',
-    mastodon: 'https://github.com/stelcodes/multiterm-astro',
+    // mastodon: 'https://github.com/stelcodes/multiterm-astro',
     email: 'https://github.com/stelcodes/multiterm-astro',
-    linkedin: 'https://github.com/stelcodes/multiterm-astro',
-    bluesky: 'https://github.com/stelcodes/multiterm-astro',
-    twitter: 'https://github.com/stelcodes/multiterm-astro',
+    // linkedin: 'https://github.com/stelcodes/multiterm-astro',
+    // bluesky: 'https://github.com/stelcodes/multiterm-astro',
+    // twitter: 'https://github.com/stelcodes/multiterm-astro',
+    bilibili: 'https://space.bilibili.com/513671572',
     rss: true, // Set to true to include an RSS feed link in the footer
+  },
+  // Configuration for the likes / reactions widget (replaces comments).
+  likes: {
+    // Set to false to hide the widget site-wide.
+    enabled: true,
+    // Your Cloudflare Worker endpoint, e.g. https://<name>.<account>.workers.dev
+    // Leave empty to disable network calls (UI will show a hint).
+    endpoint: '',
+    reactions: [
+      { key: 'like', emoji: '👍', name: '赞' },
+      { key: 'dislike', emoji: '👎', name: '踩' },
+      { key: 'laugh', emoji: '😄', name: '开心' },
+      { key: 'hooray', emoji: '🎉', name: '庆祝' },
+      { key: 'confused', emoji: '😕', name: '困惑' },
+      { key: 'heart', emoji: '❤️', name: '喜欢' },
+      { key: 'rocket', emoji: '🚀', name: '火箭' },
+      { key: 'eyes', emoji: '👀', name: '围观' },
+    ],
+    uiText: {
+      sectionTitle: '互动',
+      pickerTitle: '选择表情',
+      missingBackendHint: '未配置表情后端：请在 site.config.ts 的 likes.endpoint 填入你的 Worker 地址。',
+      statusNotConfigured: '未配置表情后端',
+      statusLoading: '加载中…',
+      statusLoadFailed: '加载失败',
+      statusSubmitting: '提交中…',
+      statusSubmitFailed: '提交失败',
+      statusAlreadyReactedToday: '今天你已经点过这个表情了',
+      statusRecorded: '已记录',
+    },
+    showMissingBackendHint: true,
+  },
+  // GitHub cards rendered from :::github directives in Markdown.
+  // By default we hydrate cards on the client (avoids build-time TLS/cert issues).
+  githubCards: {
+    enabled: true,
+    mode: 'client',
+    apiBase: 'https://api.github.com',
+    cacheTtlMs: 1000 * 60 * 60 * 24, // 24h
   },
   // Configuration for Giscus comments.
   // To set up Giscus, follow the instructions at https://giscus.app/
@@ -165,21 +212,15 @@ const config: SiteConfig = {
   // Take the values from the generated script tag at https://giscus.app and fill them in here.
   // IMPORTANT: Update giscus.json in the root of the project with your own website URL
   // If you don't want to use Giscus, set this to undefined.
-  giscus: {
-    repo: 'stelcodes/multiterm-astro',
-    repoId: 'R_kgDOPNnBig',
-    category: 'Giscus',
-    categoryId: 'DIC_kwDOPNnBis4CteOc',
-    reactionsEnabled: true, // Enable reactions on post itself
-  },
+  giscus: undefined,
   // These are characters available for the character chat feature.
   // To add your own character, add an image file to the top-level `/public` directory
   // Make sure to compress the image to a web-friendly size (<100kb)
   // Try using the excellent https://squoosh.app web app for creating small webp files
   characters: {
-    owl: '/owl.webp',
-    unicorn: '/unicorn.webp',
-    duck: '/duck.webp',
+    dog: '/dog.webp',
+    boy_dog: '/boy_dog.webp',
+    old_dog: '/old_dog.webp',
   },
 }
 

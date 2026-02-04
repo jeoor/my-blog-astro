@@ -289,7 +289,7 @@ export class SeriesGroup extends PostsCollationGroup {
   // Factory method to create a SeriesGroup instance with async data fetching
   static async build(posts?: CollectionEntry<'posts'>[]): Promise<SeriesGroup> {
     const sortedPosts = posts || (await getSortedPosts())
-    const seriesGroup = new SeriesGroup('Series', '/series', [])
+    const seriesGroup = new SeriesGroup('系列', '/series', [])
     sortedPosts.forEach((post) => {
       const frontmatterSeries = post.data.series
       if (frontmatterSeries) {
@@ -309,7 +309,7 @@ export class TagsGroup extends PostsCollationGroup {
   // Factory method to create a SeriesGroup instance with async data fetching
   static async build(posts?: CollectionEntry<'posts'>[]): Promise<SeriesGroup> {
     const sortedPosts = posts || (await getSortedPosts())
-    const tagsGroup = new TagsGroup('Tags', '/tags', [])
+    const tagsGroup = new TagsGroup('标签', '/tags', [])
     sortedPosts.forEach((post) => {
       const frontmatterTags = post.data.tags || []
       frontmatterTags.forEach((tag) => {

@@ -17,11 +17,10 @@ const { prevLink, prevText, nextLink, nextText } = Astro.props
     prevLink && (
       <a
         href={prevLink}
-        aria-label="Previous Page"
-        class="button flex-row items-center justify-center w-full !pr-3.5 sm:w-min"
-      >
+        aria-label="上一页"
+        class="button flex-row items-center justify-center w-full !pr-3.5 sm:w-min">
         <IconChevronsLeft class="mr-2 text-xl size-5" />
-        {prevText || 'Previous'}
+        {prevText || '上一页'}
       </a>
     )
   }
@@ -29,13 +28,12 @@ const { prevLink, prevText, nextLink, nextText } = Astro.props
     nextLink && (
       <a
         href={nextLink}
-        aria-label="Next Page"
+        aria-label="下一页"
         class:list={[
           'button flex-row items-center justify-center w-full !pl-3.5 sm:w-min',
           prevLink && 'ml-auto',
-        ]}
-      >
-        {nextText || 'Next'}
+        ]}>
+        {nextText || '下一页'}
         <IconChevronsRight class="ml-2 text-xl size-5" />
       </a>
     )

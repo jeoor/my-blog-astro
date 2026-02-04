@@ -8,28 +8,30 @@ import { getCollection, render, type CollectionEntry } from 'astro:content'
 import PostAddendum from '~/components/PostAddendum.astro'
 import TableOfContents from '~/components/TableOfContents.astro'
 import { Image } from 'astro:assets'
-import GiscusLoader from '~/components/GiscusLoader.astro'
-import siteConfig from '~/site.config'
 import Tags from '~/components/Tags.astro'
 import PostInfo from '~/components/PostInfo.astro'
 import ScrollUpButton from '~/components/ScrollUpButton.astro'
+import Reactions from '~/components/Reactions.astro'
 import type { Collation } from '~/types'
 import ChevronsRight from '~/icons/chevrons-right.svg'
 import { getPostSequenceContext } from '~/utils'
+import siteConfig from '~/site.config'
 
 export const getStaticPaths = (async () => {
   const posts = await getSortedPosts()
-  return posts.map((post) => {
-    // Get sequence context for the post
-    const { prev, next } = getPostSequenceContext(post, posts)
-    return {
-      params: { slug: post.id },
-      props: { post, prev, next },
-    }
-  })
+  return posts.map((post) => ({
+    params: { slug: post.id },
+  }))
 }) satisfies GetStaticPaths
 
-const { post, prev, next } = Astro.props
+const slug = Astro.params.slug
+const sortedPosts = await getSortedPosts()
+const post = sortedPosts.find((p) => p.id === slug)
+if (!post) {
+  throw new Error(`Post "${slug}" not found`)
+}
+
+const { prev, next } = getPostSequenceContext(post, sortedPosts)
 const postData = post.data
 const { headings, Content: PostContent } = await render(post)
 const addendum = await getCollection('addendum')
@@ -41,8 +43,6 @@ if (addendum.length > 0) {
   AddendumContent = Content
   addendumAvatarImage = addendumEntry.data.avatarImage
 }
-
-const sortedPosts = await getSortedPosts()
 
 // Get series posts if this post is part of a series
 let series: Collation<'posts'> | undefined
@@ -64,14 +64,18 @@ if (postData.tags && postData.tags.length > 0) {
   const tagsGroup = await TagsGroup.build(sortedPosts)
   tags = tagsGroup.matchMany(postData.tags)
 }
+
+const likes = siteConfig.likes
+const likesEnabled = likes?.enabled !== false
+const showLikes = likesEnabled && !postData.disablelike
+const likesSectionTitle = likes?.uiText?.sectionTitle || '互动'
 ---
 
 <Layout
   title={postData.title}
   description={postData.description}
   author={postData.author}
-  tags={postData.tags}
->
+  tags={postData.tags}>
   <article class="max-w-full py-7.5" data-pagefind-body>
     {
       postData.coverImage && (
@@ -111,9 +115,8 @@ if (postData.tags && postData.tags.length > 0) {
     nextPostInSeries && (
       <a
         href={`/posts/${nextPostInSeries.id}`}
-        class="button justify-center -mt-8 mb-8 !whitespace-normal text-center flex gap-2 sm:gap-3 items-center"
-      >
-        <span>Next: {nextPostInSeries.data.title}</span>
+        class="button justify-center -mt-8 mb-8 !whitespace-normal text-center flex gap-2 sm:gap-3 items-center">
+        <span>下一篇：{nextPostInSeries.data.title}</span>
         <ChevronsRight class="size-5 hidden sm:block" />
       </a>
     )
@@ -128,24 +131,30 @@ if (postData.tags && postData.tags.length > 0) {
   {
     showSeries && series ? (
       <section>
-        <DividerText text={`${series.title} Series`} />
+        <DividerText text={`${series.title} 系列`} />
         {series.entries.map((seriesPost) => (
           <PostPreview post={seriesPost} />
         ))}
       </section>
     ) : prev || next ? (
       <section>
-        <DividerText text="More Posts" />
+        <DividerText text="更多文章" />
         {prev && <PostPreview post={prev} />}
         {next && <PostPreview post={next} />}
       </section>
     ) : null
   }
   {
-    siteConfig.giscus && (
+    showLikes && (
       <section>
-        <DividerText text="Comments" />
-        <GiscusLoader />
+        <DividerText text={likesSectionTitle} />
+        <Reactions
+          postId={post.id}
+          endpoint={likes?.endpoint}
+          reactions={likes?.reactions}
+          uiText={likes?.uiText}
+          showMissingBackendHint={likes?.showMissingBackendHint}
+        />
       </section>
     )
   }

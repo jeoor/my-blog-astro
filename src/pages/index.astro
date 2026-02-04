@@ -40,7 +40,7 @@ const postsHaveSeries = sortedPosts.some((post) => post.data.series)
   {
     postsHaveSeries && (
       <section>
-        <BlockHeader>Series</BlockHeader>
+        <BlockHeader>系列</BlockHeader>
         <SeriesSection posts={sortedPosts} />
       </section>
     )
@@ -48,7 +48,7 @@ const postsHaveSeries = sortedPosts.some((post) => post.data.series)
   {
     postsHaveTags && (
       <section>
-        <BlockHeader>Tags</BlockHeader>
+        <BlockHeader>标签</BlockHeader>
         <TagsSection posts={sortedPosts} />
       </section>
     )
@@ -56,14 +56,14 @@ const postsHaveSeries = sortedPosts.some((post) => post.data.series)
   {
     sortedPosts.length > 0 && (
       <section>
-        <BlockHeader>Latest Posts</BlockHeader>
+        <BlockHeader>最新文章</BlockHeader>
         {sortedPosts
           .reverse()
           .slice(0, Math.floor(siteConfig.pageSize / 2))
           .map((post) => (
             <PostPreview post={post} />
           ))}
-        <Pagination nextLink="/posts" nextText="Archive" />
+        <Pagination nextLink="/posts" nextText="归档" />
       </section>
     )
   }

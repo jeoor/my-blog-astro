@@ -11,15 +11,13 @@ const { trailingSlashes = false } = Astro.props
     class="hover:text-accent flex cursor-pointer items-center justify-center rounded-md"
     aria-keyshortcuts="Control+K Meta+K"
     data-open-modal
-    disabled
-  >
+    disabled>
     <IconSearch class="size-6 text-accent" />
-    <span class="sr-only">Open Search</span>
+    <span class="sr-only">打开搜索</span>
   </button>
   <dialog
-    aria-label="search"
-    class="text-foreground! bg-background max-h-5/6 min-h-48 w-7/8 sm:w-5/6 max-w-xl border-double! border-4 border-accent/30 shadow-sm backdrop:backdrop-blur-sm open:flex mx-auto mt-10 sm:mt-16 mb-auto rounded-xl"
-  >
+    aria-label="搜索"
+    class="text-foreground! bg-background max-h-5/6 min-h-48 w-7/8 sm:w-5/6 max-w-xl border-double! border-4 border-accent/30 shadow-sm backdrop:backdrop-blur-sm open:flex mx-auto mt-10 sm:mt-16 mb-auto rounded-xl">
     <div class="dialog-frame flex grow flex-col gap-4 p-6 pt-6 max-w-full">
       <button class="cursor-pointer fixed top-2 right-2 rounded-full" data-close-modal>
         <IconCircleX class="size-6 text-accent/50" />
@@ -28,8 +26,9 @@ const { trailingSlashes = false } = Astro.props
         import.meta.env.DEV ? (
           <div class="mx-auto text-center">
             <p>
-              Search is only available in production builds. <br />
-              Try building and previewing the site to test it out locally.
+              搜索仅在生产构建中可用。
+              <br />
+              请先执行构建并使用预览模式在本地测试。
             </p>
           </div>
         ) : (
@@ -141,6 +140,18 @@ const { trailingSlashes = false } = Astro.props
           element: '#pagefind-search',
           showImages: false,
           showSubResults: true,
+          translations: {
+            language: 'zh-cn',
+            search_label: '站内搜索',
+            placeholder: '搜索文章与页面…',
+            clear_search: '清空',
+            load_more: '加载更多',
+            filters_label: '筛选',
+            searching: '正在搜索“[SEARCH_TERM]”…',
+            zero_results: '未找到与“[SEARCH_TERM]”相关的结果。',
+            one_result: '找到 [COUNT] 条结果（“[SEARCH_TERM]”）。',
+            many_results: '找到 [COUNT] 条结果（“[SEARCH_TERM]”）。',
+          },
           processResult: (result: {
             url: string
             sub_results: Array<{ url: string }>

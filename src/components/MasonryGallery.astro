@@ -1,0 +1,102 @@
+---
+import { Image } from 'astro:assets'
+import type { ImageMetadata } from 'astro'
+
+export interface MasonryGalleryItem {
+  image: ImageMetadata
+  alt: string
+}
+
+interface Props {
+  items: MasonryGalleryItem[]
+  /** Fancybox group name; set to undefined/empty to disable lightbox binding. */
+  fancyboxGroup?: string
+}
+
+const { items, fancyboxGroup = 'gallery' } = Astro.props
+---
+
+<div class="masonry" aria-label="图片图库">
+  {
+    items.map(({ image, alt }) => {
+      const WrapperTag = fancyboxGroup ? 'a' : 'div'
+      const wrapperProps = fancyboxGroup
+        ? {
+            href: image.src,
+            'data-fancybox': fancyboxGroup,
+            'data-caption': alt,
+          }
+        : {}
+
+      return (
+        <WrapperTag class="masonry-item" {...wrapperProps}>
+          <Image
+            src={image}
+            alt={alt}
+            loading="lazy"
+            decoding="async"
+            format="webp"
+            quality={72}
+            widths={[360, 720, 1080]}
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            class="masonry-img"
+          />
+        </WrapperTag>
+      )
+    })
+  }
+</div>
+
+<style>
+  .masonry {
+    column-count: 1;
+    column-gap: 12px;
+  }
+
+  @media (min-width: 640px) {
+    .masonry {
+      column-count: 2;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .masonry {
+      column-count: 3;
+    }
+  }
+
+  .masonry-item {
+    display: inline-block;
+    width: 100%;
+    margin: 0 0 12px;
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    text-decoration: none;
+    color: inherit;
+    border-radius: 12px;
+    outline: none;
+  }
+
+  .masonry-item:focus-visible {
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--theme-accent), 45%, transparent);
+  }
+
+  .masonry-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 12px;
+    border: 1px solid color-mix(in srgb, var(--theme-foreground), 10%, transparent);
+    background: color-mix(in srgb, var(--theme-foreground), 3%, transparent);
+    transition:
+      transform 150ms ease,
+      border-color 150ms ease,
+      box-shadow 150ms ease;
+  }
+
+  .masonry-item:hover .masonry-img {
+    transform: translateY(-1px);
+    border-color: color-mix(in srgb, var(--theme-accent), 40%, transparent);
+    box-shadow: 0 10px 20px color-mix(in srgb, var(--theme-background), 60%, transparent);
+  }
+</style>

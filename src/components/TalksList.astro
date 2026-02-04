@@ -1,0 +1,73 @@
+---
+import type { CollectionEntry } from 'astro:content'
+import { render } from 'astro:content'
+import siteConfig from '~/site.config'
+import TalkBubble from '~/components/TalkBubble.astro'
+import { dateString } from '~/utils'
+
+interface Props {
+  entries: CollectionEntry<'talks'>[]
+  offset?: number
+  defaultAvatar?: string
+}
+
+const { entries, offset = 0, defaultAvatar = '/avatar.jpg' } = Astro.props
+
+type IndexedEntry = { entry: CollectionEntry<'talks'>; idx: number }
+const groupsMap = new Map<number, IndexedEntry[]>()
+entries.forEach((entry, idx) => {
+  const year = entry.data.published.getFullYear()
+  const arr = groupsMap.get(year)
+  if (arr) arr.push({ entry, idx })
+  else groupsMap.set(year, [{ entry, idx }])
+})
+
+const groups = Array.from(groupsMap.entries()).map(([year, items]) => ({ year, items }))
+---
+
+<div class="prose max-w-none flex flex-col gap-0">
+  {
+    await Promise.all(
+      groups.map(async ({ year, items }) => {
+        return (
+          <>
+            <h2 class="mt-10 first:mt-0">{year}</h2>
+            {await Promise.all(
+              items.map(async ({ entry, idx }) => {
+                const { Content } = await render(entry)
+                const align =
+                  entry.data.align ?? ((offset + idx) % 2 === 0 ? 'left' : 'right')
+                const avatarSrc = entry.data.avatar || defaultAvatar
+                const publishedText =
+                  dateString(entry.data.published) +
+                  ' ' +
+                  entry.data.published.toLocaleTimeString('zh-CN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    hour12: false,
+                  })
+
+                return (
+                  <TalkBubble
+                    avatarSrc={avatarSrc}
+                    avatarAlt={siteConfig.author}
+                    align={align}>
+                    {entry.data.title && (
+                      <p class="font-semibold text-heading4 mt-0 mb-2">
+                        {entry.data.title}
+                      </p>
+                    )}
+                    <Content />
+                    <div class="text-foreground/80 shrink-0 pl-0.5 text-[17px] sm:text-base mt-3">
+                      <time>{publishedText}</time>
+                    </div>
+                  </TalkBubble>
+                )
+              }),
+            )}
+          </>
+        )
+      }),
+    )
+  }
+</div>

@@ -1,0 +1,13 @@
+name = "my-blog-reactions"
+main = "src/index.ts"
+compatibility_date = "2026-02-04"
+
+# 需要你在 Cloudflare 仪表盘创建 KV 后把 id 填进来
+# kv_namespaces = [
+#   { binding = "REACTIONS_KV", id = "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" }
+# ]
+
+[vars]
+# 用于生成“今天”的日期（默认中国时区）
+REACTIONS_TIMEZONE = "Asia/Shanghai"
+# 建议在 Workers Secrets 里设置：wrangler secret put REACTIONS_SALT

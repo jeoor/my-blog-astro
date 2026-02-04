@@ -1,5 +1,110 @@
 # MultiTerm Astro 🎨⚡️
 
+**MultiTerm** 是一个面向“喜欢折腾配色方案”的开发者的 Astro 博客主题。你可以用自己钟爱的编辑器配色来主题化整个网站，并让文章内容保持接近原生 Markdown 的清爽审美。
+
+可以看看官方示例站点的这篇文章：[Showing Off Blog Features](https://multiterm.stelclementine.com/posts/showing-off-blog-features)，以及在线 Demo：[multiterm.stelclementine.com](https://multiterm.stelclementine.com)。
+
+> v2.0.0 已发布 🥳
+
+![示例网站截图](https://i.imgur.com/sC8fZGN.png)
+![示例网站截图](https://i.imgur.com/Kms96QY.png)
+![示例网站截图](https://i.imgur.com/Nrr76Ub.png)
+![示例网站截图](https://i.imgur.com/vKxEO5k.png)
+![示例网站截图](https://i.imgur.com/wHGGJY9.png)
+![示例网站截图](https://i.imgur.com/YerKFZW.png)
+![自动生成的社交卡片示例](https://i.imgur.com/4CBBdF3.png)
+
+## ✨ 特性
+
+- **丰富的主题选择**：使用 Expressive Code 内置的 [Shiki 主题](https://expressive-code.com/guides/themes/#available-themes) 来统一站点配色。
+- **暗色/亮色/自动模式**：选任意两套 Shiki 主题，通过页头按钮按系统偏好自动切换。
+- **多主题选择模式**：选择三套（甚至全部 59 套）主题，让读者在对话框里自由切换；所有元素通过 CSS 变量实时联动换色。
+- **评论区（可选）**：可使用 GitHub Discussions + [Giscus](https://giscus.app) 作为评论系统，并与主题配色深度匹配。
+- **互动表情（本仓库增强）**：文章底部“点赞/表情反应”组件，支持多表情计数与“每天每篇每种表情一次”的限制（Cloudflare Worker + KV）。
+- **GitHub 活动日历（可选）**：首页可静态生成 GitHub 活动日历，并匹配当前主题。
+- **Markdown 增强**：Admonitions、侧边固定目录 TOC、emoji shortcode、KaTeX、MDX、阅读时间估算等。
+- **RSS & Sitemap**：开箱即用，无需额外配置。
+- **社交链接**：页脚可配置常见平台链接（GitHub / Mastodon / Twitter / LinkedIn / Email / RSS 等）。
+- **响应式设计**：桌面与移动端适配，基于 [Tailwind v4](https://tailwindcss.com/)。
+- **SEO 友好**：内置 SEO 最佳实践，并通过 [Satori](https://github.com/vercel/satori) 自动生成每页社交卡片。
+- **构建方式可选**：基于 [Astro](https://astro.build/)，可生成静态站（默认）或动态渲染。
+
+官方示例站点的性能/SEO分析也可以参考：
+- PageSpeed：https://pagespeed.web.dev/analysis/https-multiterm-stelclementine-com/qhnp521yci?form_factor=mobile
+- OpenGraph：https://www.opengraph.xyz/url/https%3A%2F%2Fmultiterm.stelclementine.com
+
+## 🚀 快速开始
+
+**克隆仓库**：
+
+```bash
+git clone --depth 1 https://github.com/stelcodes/multiterm-astro my-new-blog && cd my-new-blog
+```
+
+**安装依赖**：
+
+```bash
+npm install
+```
+
+**启动开发服务器**：
+
+```bash
+npm run dev
+```
+
+**构建并预览**：
+
+```bash
+npm run build && npm run preview
+```
+
+## 🛠️ 配置
+
+MultiTerm 的一个核心目标是“配置简单”。绝大多数站点配置集中在一个文件里：`src/site.config.ts`。
+
+内容与文章在 `src/content` 下。你可以删除示例内容并替换成自己的文章。
+
+### 互动表情（Likes / Reactions）
+
+本仓库把原本依赖环境变量的 endpoint 改成了 **统一的配置块**：在 `src/site.config.ts` 的 `likes` 中配置。
+
+- `likes.enabled`：站点级开关（设为 `false` 会全站隐藏）。
+- `likes.endpoint`：Cloudflare Worker 的地址（例如 `https://xxx.xxx.workers.dev`）。
+- `likes.reactions`：默认表情列表（与 giscus 使用的 GitHub Reactions 8 个表情一致：👍👎😄🎉😕❤️🚀👀）。
+- `likes.uiText`：文案（区块标题/提示/状态提示等）。
+- `likes.showMissingBackendHint`：未配置 endpoint 时，是否展示提示。
+
+**按文章关闭互动区块**：在文章 frontmatter 里设置：
+
+```yaml
+disablelike: true
+```
+
+后端 Worker 的部署说明见 [worker/README.md](worker/README.md)。
+
+## 📄 许可证
+
+本项目使用 [MIT License](LICENSE.txt)。
+
+## 灵感来源
+
+- https://github.com/panr/hugo-theme-terminal
+- https://github.com/chrismwilliams/astro-theme-cactus
+
+## 🩷 赞助
+
+如果你喜欢这个主题，可以考虑请作者喝杯咖啡（支持开源维护）：https://ko-fi.com/stelclementine
+
+[![Star History Chart](https://api.star-history.com/svg?repos=stelcodes/multiterm-astro&type=Date)](https://www.star-history.com/#stelcodes/multiterm-astro&Date)
+
+---
+
+<details>
+<summary>English (original)</summary>
+
+# MultiTerm Astro 🎨⚡️
+
 **MultiTerm** is an Astro blog theme designed for coders who love their color schemes. Easily theme your whole website with your favorite color schemes and have your prose rendered with a nod to the aesthetics of raw markdown.
 
 Check out the [Showing Off Blog Features](https://multiterm.stelclementine.com/posts/showing-off-blog-features) post to see all the exciting MultiTerm capabilites on the [live example site](https://multiterm.stelclementine.com)!
@@ -77,5 +182,6 @@ This project is licensed under the [MIT License](LICENSE.txt).
 
 Consider [buying me a coffee](https://ko-fi.com/stelclementine) to keep me caffeinated while I work on open source projects like this one!
 
-
 [![Star History Chart](https://api.star-history.com/svg?repos=stelcodes/multiterm-astro&type=Date)](https://www.star-history.com/#stelcodes/multiterm-astro&Date)
+
+</details>

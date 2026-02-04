@@ -2,7 +2,7 @@ import { defineCollection, z } from 'astro:content'
 import { glob } from 'astro/loaders'
 
 const postsCollection = defineCollection({
-  loader: glob({ pattern: ['**/*.md', '**/*.mdx'], base: './src/content/posts' }),
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/posts' }),
   schema: ({ image }) =>
     z.object({
       title: z.string(),
@@ -20,11 +20,12 @@ const postsCollection = defineCollection({
         })
         .optional(),
       toc: z.boolean().optional().default(true),
+      disablelike: z.boolean().optional().default(false),
     }),
 })
 
 const homeCollection = defineCollection({
-  loader: glob({ pattern: ['home.md', 'home.mdx'], base: './src/content' }),
+  loader: glob({ pattern: 'home.{md,mdx}', base: './src/content' }),
   schema: ({ image }) =>
     z.object({
       avatarImage: z
@@ -38,7 +39,7 @@ const homeCollection = defineCollection({
 })
 
 const addendumCollection = defineCollection({
-  loader: glob({ pattern: ['addendum.md', 'addendum.mdx'], base: './src/content' }),
+  loader: glob({ pattern: 'addendum.{md,mdx}', base: './src/content' }),
   schema: ({ image }) =>
     z.object({
       avatarImage: z
@@ -50,8 +51,21 @@ const addendumCollection = defineCollection({
     }),
 })
 
+const talksCollection = defineCollection({
+  loader: glob({ pattern: '**/*.{md,mdx}', base: './src/content/talks' }),
+  schema: () =>
+    z.object({
+      published: z.coerce.date(),
+      draft: z.boolean().optional().default(false),
+      align: z.enum(['left', 'right']).optional(),
+      avatar: z.string().optional(),
+      title: z.string().optional(),
+    }),
+})
+
 export const collections = {
   posts: postsCollection,
   home: homeCollection,
   addendum: addendumCollection,
+  talks: talksCollection,
 }

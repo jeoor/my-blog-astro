@@ -20,8 +20,7 @@ const reactionsEnabled = giscusConfig.reactionsEnabled ? '1' : '0'
   data-repo-id={repoId}
   data-category={category}
   data-category-id={categoryId}
-  data-reactions-enabled={reactionsEnabled}
->
+  data-reactions-enabled={reactionsEnabled}>
 </div>
 <script>
   function loadGiscus() {
@@ -60,7 +59,7 @@ const reactionsEnabled = giscusConfig.reactionsEnabled ? '1' : '0'
     // Setting this to 'bottom' doesn't work. Not sure why.
     script.setAttribute('data-input-position', 'top')
     script.setAttribute('data-theme', `${origin}/giscus/${theme}.css`)
-    script.setAttribute('data-lang', 'en')
+    script.setAttribute('data-lang', 'zh-CN')
     script.setAttribute('loading', 'lazy')
     script.crossOrigin = 'anonymous'
     script.async = true

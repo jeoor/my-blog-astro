@@ -152,6 +152,7 @@ export type SocialLinks = {
   mastodon?: string
   bluesky?: string
   linkedin?: string
+  bilibili?: string
   email?: string
   rss?: boolean
 }
@@ -162,6 +163,55 @@ export type GiscusConfig = {
   category: string
   categoryId: string
   reactionsEnabled: boolean
+}
+
+export type LikeReaction = {
+  key: string
+  emoji: string
+  name?: string
+}
+
+export type LikesUiText = {
+  sectionTitle?: string
+  pickerTitle?: string
+  missingBackendHint?: string
+  statusNotConfigured?: string
+  statusLoading?: string
+  statusLoadFailed?: string
+  statusSubmitting?: string
+  statusSubmitFailed?: string
+  statusAlreadyReactedToday?: string
+  statusRecorded?: string
+}
+
+export type LikesConfig = {
+  enabled?: boolean
+  endpoint?: string
+  reactions?: LikeReaction[]
+  uiText?: LikesUiText
+  showMissingBackendHint?: boolean
+}
+
+export type GitHubCardsMode = 'client' | 'build' | 'hybrid'
+
+export type GitHubCardsConfig = {
+  /** Set to false to disable card enhancement JS site-wide. */
+  enabled?: boolean
+  /**
+   * How cards are hydrated.
+   * - client: always render placeholders and fetch in the browser
+   * - build: fetch at build time only (no client JS)
+   * - hybrid: try build-time fetch, then client-side enhance as fallback
+   */
+  mode?: GitHubCardsMode
+  /**
+   * Base URL for the GitHub REST API.
+   * Defaults to https://api.github.com.
+   * Can be set to your own proxy (recommended if you need caching or a token).
+   */
+  apiBase?: string
+  /** LocalStorage cache TTL for client-side fetches (ms). */
+  cacheTtlMs?: number
 }
 
 export interface SiteConfig {
@@ -177,6 +227,8 @@ export interface SiteConfig {
   themes: ThemesConfig
   socialLinks: SocialLinks
   navLinks: NavLink[]
-  giscus: GiscusConfig | undefined,
+  likes?: LikesConfig
+  githubCards?: GitHubCardsConfig
+  giscus: GiscusConfig | undefined
   characters: Record<string, string>
 }

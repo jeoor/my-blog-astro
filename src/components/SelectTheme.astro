@@ -17,27 +17,23 @@ function kebabToTitleCase(str: string): string {
     class="hover:text-accent flex cursor-pointer items-center justify-center rounded-md"
     aria-keyshortcuts="Control+K Meta+K"
     data-open-modal
-    disabled
-  >
+    disabled>
     <IconPalette class="size-6 text-accent" />
-    <span class="sr-only">Select Theme</span>
+    <span class="sr-only">选择主题</span>
   </button>
   <dialog
-    aria-label="select-theme"
-    class="text-foreground! bg-background max-h-5/6 max-w-5/6 border-double! border-4 border-accent/30 shadow-sm backdrop:backdrop-blur-sm open:flex mx-auto mt-16 mb-auto rounded-xl"
-  >
+    aria-label="选择主题"
+    class="text-foreground! bg-background max-h-5/6 max-w-5/6 border-double! border-4 border-accent/30 shadow-sm backdrop:backdrop-blur-sm open:flex mx-auto mt-16 mb-auto rounded-xl">
     <div class="dialog-frame flex grow flex-col gap-4 px-10 py-1 max-w-full">
       <button
-        aria-roledescription="close"
+        aria-roledescription="关闭"
         class="cursor-pointer fixed top-2 right-2 rounded-full"
-        data-close-modal
-      >
+        data-close-modal>
         <IconCircleX class="size-6 text-accent/50" />
       </button>
       <ul
         id="theme-change-list"
-        class="flex flex-col bg-background text-accent m-0 p-2 rounded-xl"
-      >
+        class="flex flex-col bg-background text-accent m-0 p-2 rounded-xl">
         {
           siteConfig.themes.include.map((theme) => (
             <li>

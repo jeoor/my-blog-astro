@@ -1,0 +1,23 @@
+---
+import '@fancyapps/ui/dist/fancybox/fancybox.css'
+---
+
+<script>
+  import { Fancybox } from '@fancyapps/ui'
+
+  const bind = () => {
+    Fancybox.bind('[data-fancybox]', {
+      caption: (_fancybox: any, _carousel: any, slide: any) => {
+        const trigger = slide?.triggerEl as HTMLElement | null | undefined
+        const caption = trigger?.getAttribute('data-caption')
+        return caption || ''
+      },
+    })
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bind, { once: true })
+  } else {
+    bind()
+  }
+</script>

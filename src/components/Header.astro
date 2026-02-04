@@ -15,28 +15,25 @@ const selectTheme =
     <a
       id="logo"
       href="/"
-      class="block px-4 py-1.5 max-w-full no-underline items-center bg-accent text-background font-bold rounded-xl"
-    >
+      class="block px-4 py-1.5 max-w-full no-underline items-center bg-accent text-background font-bold rounded-xl">
       {siteConfig.title}
     </a>
     <div class="flex items-center gap-3 sm:mr-3">
       <Search trailingSlashes={siteConfig.trailingSlashes} />
       {lightDarkAutoTheme && <LightDarkAutoButton />}
       {selectTheme && <SelectTheme />}
-      <nav id="nav-mobile" aria-label="Menu" class="p-0 text-accent sm:hidden">
+      <nav id="nav-mobile" aria-label="菜单" class="p-0 text-accent sm:hidden">
         <button
           id="nav-mobile-button"
           class="px-3 py-1 h-full cursor-pointer border-2 rounded-xl bg-background"
           type="button"
           aria-expanded="false"
-          aria-controls="nav-menu-list"
-        >
+          aria-controls="nav-menu-list">
           ▾
         </button>
         <ul
           id="nav-mobile-list"
-          class="invisible absolute flex flex-col bg-background shadow text-accent border-2 m-0 p-2.5 top-11.5 left-auto right-0 z-50 rounded-xl"
-        >
+          class="invisible absolute flex flex-col bg-background shadow text-accent border-2 m-0 p-2.5 top-11.5 left-auto right-0 z-50 rounded-xl">
           {
             siteConfig.navLinks.map((link) => (
               <li class="p-1" aria-expanded="false">
@@ -48,7 +45,7 @@ const selectTheme =
       </nav>
     </div>
   </div>
-  <nav aria-label="Menu" class="p-0 mt-4 ml-0.5 text-accent hidden sm:block">
+  <nav aria-label="菜单" class="p-0 mt-4 ml-0.5 text-accent hidden sm:block">
     <ul class="flex flex-row text-accent">
       {
         siteConfig.navLinks.map((link) => (

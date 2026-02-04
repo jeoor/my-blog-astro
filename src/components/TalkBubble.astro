@@ -1,0 +1,27 @@
+---
+interface Props {
+  avatarSrc: string
+  avatarAlt?: string
+  align?: 'left' | 'right'
+}
+
+const { avatarSrc, avatarAlt = 'avatar', align } = Astro.props
+const alignClass = align === 'left' || align === 'right' ? `align-${align}` : undefined
+---
+
+<aside
+  class:list={['character-dialogue', alignClass]}
+  aria-label="说说"
+  data-character="talk">
+  <img
+    class="character-dialogue-image rounded-xl"
+    alt={avatarAlt}
+    loading="lazy"
+    decoding="async"
+    src={avatarSrc}
+    width="100"
+  />
+  <div class="character-dialogue-content prose max-w-none">
+    <slot />
+  </div>
+</aside>

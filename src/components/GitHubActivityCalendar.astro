@@ -189,23 +189,24 @@ const activityYear = getYear(parseISO(firstActivity.date))
 const weeks = groupByWeeks(activities, weekStart)
 const labels = {
   months: [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
+    '1月',
+    '2月',
+    '3月',
+    '4月',
+    '5月',
+    '6月',
+    '7月',
+    '8月',
+    '9月',
+    '10月',
+    '11月',
+    '12月',
   ],
-  totalCount: `{{count}} contributions in ${year === 'last' ? 'the last year' : '{{year}}'}`,
+  totalCount:
+    year === 'last' ? '过去一年 {{count}} 次贡献' : '{{year}} 年 {{count}} 次贡献',
   legend: {
-    less: 'Less',
-    more: 'More',
+    less: '少',
+    more: '多',
   },
 }
 const labelHeight = hideMonthLabels ? 0 : fontSize + labelMargin
@@ -215,21 +216,18 @@ const height = labelHeight + (blockSize + blockMargin) * 7 - blockMargin
 
 <article
   id="github-activity-calendar"
-  class="w-max max-w-full flex flex-col gap-2 text-sm"
->
+  class="w-max max-w-full flex flex-col gap-2 text-sm">
   <div
     class="max-w-full overflow-x-auto pt-0.5"
     style={{
       // Don't cover the calendar with the scrollbar.
       scrollbarGutter: 'stable',
-    }}
-  >
+    }}>
     <svg
       class="block visible"
       width={width}
       height={height}
-      viewBox={`0 0 ${width} ${height}`}
-    >
+      viewBox={`0 0 ${width} ${height}`}>
       {
         !hideMonthLabels && (
           <g>
@@ -238,8 +236,7 @@ const height = labelHeight + (blockSize + blockMargin) * 7 - blockMargin
                 x={(blockSize + blockMargin) * weekIndex}
                 y={0}
                 dominant-baseline="hanging"
-                fill="currentColor"
-              >
+                fill="currentColor">
                 {label}
               </text>
             ))}
@@ -280,7 +277,7 @@ const height = labelHeight + (blockSize + blockMargin) * 7 - blockMargin
               ? labels.totalCount
                   .replace('{{count}}', String(totalCount))
                   .replace('{{year}}', String(activityYear))
-              : `${totalCount} activities in ${activityYear}`}
+              : `${activityYear} 年 ${totalCount} 次活动`}
           </div>
         )}
         {!hideColorLegend && (

@@ -23,6 +23,8 @@ import remarkMath from 'remark-math' /* for latex math support */
 import rehypeKatex from 'rehype-katex' /* again, for latex math support */
 import remarkGemoji from './src/plugins/remark-gemoji' /* for shortcode emoji support */
 import rehypePixelated from './src/plugins/rehype-pixelated' /* Custom plugin to handle pixelated images */
+import rehypeFancybox from './src/plugins/rehype-fancybox'
+import rehypeImgLazy from './src/plugins/rehype-img-lazy'
 
 // https://astro.build/config
 export default defineConfig({
@@ -53,7 +55,9 @@ export default defineConfig({
         },
       ],
       rehypeUnwrapImages,
+      [rehypeImgLazy, { excludeClassNames: ['character-dialogue-image'] }],
       rehypePixelated,
+      [rehypeFancybox, { group: 'gallery' }],
       rehypeKatex,
     ],
   },
