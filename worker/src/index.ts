@@ -15,6 +15,12 @@ export interface Env {
     REACTIONS_TIMEZONE?: string
 }
 
+type GithubActivityApiResponse = {
+    total: Record<string, number>
+    contributions: Array<{ date: string; count: number; level: number }>
+    error?: string
+}
+
 type Counts = Record<string, number>
 
 type Me = {
@@ -40,6 +46,32 @@ function withCors(req: Request, res: Response) {
     headers.set('Access-Control-Allow-Headers', 'content-type')
     headers.set('Access-Control-Max-Age', '86400')
     return new Response(res.body, { status: res.status, headers })
+}
+
+async function fetchWithTimeout(url: string, timeoutMs = 8000) {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+        return await fetch(url, {
+            signal: controller.signal,
+            headers: {
+                Accept: 'application/json',
+            },
+        })
+    } finally {
+        clearTimeout(timeoutId)
+    }
+}
+
+function normalizeYear(input: string | null) {
+    if (!input) return 'last'
+    if (input === 'last') return 'last'
+    const n = Number(input)
+    if (!Number.isFinite(n)) return 'last'
+    // Clamp to a reasonable range.
+    const y = Math.floor(n)
+    if (y < 2008 || y > 2100) return 'last'
+    return String(y)
 }
 
 function getDateString(timeZone: string) {
@@ -118,6 +150,63 @@ export default {
         }
 
         const url = new URL(req.url)
+        if (url.pathname === '/github-activity') {
+            if (req.method !== 'GET') {
+                return withCors(req, json({ error: 'method_not_allowed' }, { status: 405 }))
+            }
+
+            const u = (url.searchParams.get('u') || '').trim()
+            if (!u) return withCors(req, json({ error: 'missing_user' }, { status: 400 }))
+            // Basic sanity limit.
+            if (u.length > 64) return withCors(req, json({ error: 'bad_user' }, { status: 400 }))
+
+            const y = normalizeYear(url.searchParams.get('y'))
+            const upstream = `https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(u)}?y=${encodeURIComponent(y)}`
+
+            const cache = (caches as any).default as Cache | undefined
+            const cacheKey = new Request(upstream, { method: 'GET' })
+            if (cache) {
+                const hit = await cache.match(cacheKey)
+                if (hit) {
+                    // Re-apply CORS per request origin.
+                    return withCors(req, hit)
+                }
+            }
+
+            let upstreamRes: Response
+            try {
+                upstreamRes = await fetchWithTimeout(upstream, 10000)
+            } catch {
+                return withCors(req, json({ error: 'upstream_timeout' }, { status: 504 }))
+            }
+
+            let data: GithubActivityApiResponse
+            try {
+                data = (await upstreamRes.json()) as GithubActivityApiResponse
+            } catch {
+                return withCors(req, json({ error: 'bad_upstream_json' }, { status: 502 }))
+            }
+
+            if (!upstreamRes.ok) {
+                return withCors(req, json({ error: data?.error || 'upstream_failed' }, { status: 502 }))
+            }
+
+            const ttlSeconds = 60 * 60 * 6 // 6h
+            const res = json(data, {
+                headers: {
+                    // Cache at CDN edge when possible.
+                    'Cache-Control': `public, max-age=60, s-maxage=${ttlSeconds}, stale-while-revalidate=86400`,
+                },
+            })
+
+            if (cache) {
+                // Store without per-request CORS headers; we'll add them on the way out.
+                await cache.put(cacheKey, res.clone())
+            }
+
+            return withCors(req, res)
+        }
+
         if (url.pathname !== '/reactions') {
             return withCors(req, json({ error: 'not_found' }, { status: 404 }))
         }

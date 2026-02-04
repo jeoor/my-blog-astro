@@ -5,6 +5,10 @@
 - `GET /reactions?post=<postId>`：获取计数 + 当前用户今天是否点过
 - `POST /reactions`：提交表情反应（每天每篇每种表情最多一次）
 
+以及一个可选接口（用于首页 GitHub 贡献日历加速）：
+
+- `GET /github-activity?u=<username>&y=<year|last>`：获取贡献日历 JSON（带边缘缓存 + CORS）
+
 ## 部署
 
 1. 安装 wrangler（全局或项目内均可）
@@ -26,6 +30,10 @@ wrangler deploy
 在站点配置文件 `src/site.config.ts` 里设置：
 
 - `likes.endpoint=https://<你的worker域名>`
+
+如果你想加速首页的 GitHub 贡献日历（大陆访问更快），可以把：
+
+- `githubActivityCalendar.endpoint=https://<你的worker域名>/github-activity`
 
 本地开发时，可以填：
 

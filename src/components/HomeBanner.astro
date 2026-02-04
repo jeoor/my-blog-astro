@@ -1,6 +1,7 @@
 ---
 import { Image } from 'astro:assets'
-import GitHubActivityCalendar from '~/components/GitHubActivityCalendar.astro'
+import GitHubActivityCalendar from '~/components/GitHubActivityCalendarClient.astro'
+import siteConfig from '~/site.config'
 import type { FrontmatterImage } from '~/types'
 
 interface Props {
@@ -12,8 +13,7 @@ const { avatarImage, githubCalendar } = Astro.props
 
 <div class="my-6 md:mx-2">
   <div
-    class="flex flex-col sm:flex-row items-center justify-around sm:gap-5 max-w-full mb-6"
-  >
+    class="flex flex-col sm:flex-row items-center justify-around sm:gap-5 max-w-full mb-6">
     {
       avatarImage && (
         <Image
@@ -33,5 +33,13 @@ const { avatarImage, githubCalendar } = Astro.props
       </div>
     </div>
   </div>
-  {githubCalendar && <GitHubActivityCalendar username={githubCalendar} />}
+  {
+    githubCalendar && siteConfig.githubActivityCalendar?.enabled !== false && (
+      <GitHubActivityCalendar
+        username={githubCalendar}
+        endpoint={siteConfig.githubActivityCalendar?.endpoint}
+        cacheTtlMs={siteConfig.githubActivityCalendar?.cacheTtlMs}
+      />
+    )
+  }
 </div>

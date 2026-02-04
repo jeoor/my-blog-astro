@@ -1,0 +1,315 @@
+---
+interface Props {
+  username: string
+  year?: number | 'last'
+  /** Optional proxy endpoint, e.g. https://api.example.com/github-activity */
+  endpoint?: string
+  /** LocalStorage cache TTL in ms */
+  cacheTtlMs?: number
+}
+
+const { username, year = 'last', endpoint, cacheTtlMs = 1000 * 60 * 60 * 6 } = Astro.props
+
+const monthLabels = [
+  '1月',
+  '2月',
+  '3月',
+  '4月',
+  '5月',
+  '6月',
+  '7月',
+  '8月',
+  '9月',
+  '10月',
+  '11月',
+  '12月',
+]
+const totalCountTpl =
+  year === 'last' ? '过去一年 {{count}} 次贡献' : '{{year}} 年 {{count}} 次贡献'
+---
+
+<article
+  class="w-max max-w-full flex flex-col gap-2 text-sm"
+  data-gh-activity-calendar
+  data-username={username}
+  data-year={String(year)}
+  data-endpoint={endpoint}>
+  <div class="max-w-full overflow-x-auto pt-0.5" style={{ scrollbarGutter: 'stable' }}>
+    <div class="text-foreground/70" data-gh-calendar-status>贡献日历加载中…</div>
+    <div data-gh-calendar-svg></div>
+  </div>
+  <footer
+    class="flex flex-col sm:flex-row sm:justify-between gap-x-1 gap-y-2"
+    data-gh-calendar-footer>
+  </footer>
+  <noscript>
+    <div class="text-foreground/70">需要启用 JavaScript 才能显示贡献日历。</div>
+  </noscript>
+</article>
+
+<script
+  is:inline
+  type="module"
+  define:vars={{
+    MONTHS: monthLabels,
+    TOTAL_TPL: totalCountTpl,
+    CACHE_TTL_MS: cacheTtlMs,
+  }}
+>
+  const storageKey = (u, y) => `ghcal:v2:${u}:${y}`
+
+  function range(n) {
+    return Array.from({ length: n }, (_, i) => i)
+  }
+
+  function toDateOnlyIso(date) {
+    const d = new Date(date)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return `${y}-${m}-${day}`
+  }
+
+  function startOfDay(d) {
+    const x = new Date(d)
+    x.setHours(0, 0, 0, 0)
+    return x
+  }
+
+  function diffDays(a, b) {
+    const ms = startOfDay(a).getTime() - startOfDay(b).getTime()
+    return Math.round(ms / 86400000)
+  }
+
+  function addDays(d, days) {
+    const x = new Date(d)
+    x.setDate(x.getDate() + days)
+    return x
+  }
+
+  function nextDay(date, weekday) {
+    const d = new Date(date)
+    const diff = (weekday - d.getDay() + 7) % 7
+    return addDays(d, diff)
+  }
+
+  function subWeeks(date, n) {
+    return addDays(date, -7 * n)
+  }
+
+  function fillHoles(activities) {
+    const map = new Map(activities.map((a) => [a.date, a]))
+    const first = activities[0]
+    const last = activities[activities.length - 1]
+    const start = new Date(first.date)
+    const end = new Date(last.date)
+
+    const out = []
+    for (let d = startOfDay(start); d <= end; d = addDays(d, 1)) {
+      const key = toDateOnlyIso(d)
+      if (map.has(key)) out.push(map.get(key))
+      else out.push({ date: key, count: 0, level: 0 })
+    }
+    return out
+  }
+
+  function groupByWeeks(activities, weekStart = 0) {
+    const normalized = fillHoles(activities)
+    const firstDate = new Date(normalized[0].date)
+    const firstCalendarDate =
+      firstDate.getDay() === weekStart
+        ? firstDate
+        : subWeeks(nextDay(firstDate, weekStart), 1)
+
+    const pad = Math.max(0, diffDays(firstDate, firstCalendarDate))
+    const padded = Array(pad).fill(undefined).concat(normalized)
+    const numberOfWeeks = Math.ceil(padded.length / 7)
+    return range(numberOfWeeks).map((i) => padded.slice(i * 7, i * 7 + 7))
+  }
+
+  function getMonthLabels(weeks, monthNames) {
+    const labels = []
+    for (let weekIndex = 0; weekIndex < weeks.length; weekIndex++) {
+      const week = weeks[weekIndex]
+      const first = week.find((a) => a !== undefined)
+      if (!first) continue
+      const month = monthNames[new Date(first.date).getMonth()]
+      const prev = labels[labels.length - 1]
+      if (weekIndex === 0 || !prev || prev.label !== month) {
+        labels.push({ weekIndex, label: month })
+      }
+    }
+
+    const minWeeks = 3
+    return labels.filter(({ weekIndex }, index, arr) => {
+      if (index === 0) return arr[1] && arr[1].weekIndex - weekIndex >= minWeeks
+      if (index === arr.length - 1) return weeks.slice(weekIndex).length >= minWeeks
+      return true
+    })
+  }
+
+  function calcColorScale(start, end, steps) {
+    return range(steps).map((i) => {
+      if (i === 0) return start
+      if (i === steps - 1) return end
+      const pos = ((i / (steps - 1)) * 100).toFixed(2)
+      return `color-mix(in oklab, ${end} ${parseFloat(pos)}%, ${start})`
+    })
+  }
+
+  async function fetchWithTimeout(url, timeoutMs = 8000) {
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+    try {
+      return await fetch(url, {
+        signal: controller.signal,
+        headers: {
+          Accept: 'application/json',
+        },
+      })
+    } finally {
+      clearTimeout(timeoutId)
+    }
+  }
+
+  function getCached(u, y) {
+    try {
+      const raw = localStorage.getItem(storageKey(u, y))
+      if (!raw) return null
+      const parsed = JSON.parse(raw)
+      if (!parsed || typeof parsed !== 'object') return null
+      if (typeof parsed.ts !== 'number' || !parsed.data) return null
+      if (Date.now() - parsed.ts > CACHE_TTL_MS) return null
+      return parsed.data
+    } catch {
+      return null
+    }
+  }
+
+  function setCached(u, y, data) {
+    try {
+      localStorage.setItem(storageKey(u, y), JSON.stringify({ ts: Date.now(), data }))
+    } catch {
+      // ignore quota errors
+    }
+  }
+
+  async function loadData(u, y, endpoint) {
+    const cached = getCached(u, y)
+    if (cached) return cached
+
+    let url
+    if (typeof endpoint === 'string' && endpoint.trim()) {
+      url = `${endpoint.replace(/\/+$/, '')}?u=${encodeURIComponent(u)}&y=${encodeURIComponent(y)}`
+    } else {
+      url = `https://github-contributions-api.jogruber.de/v4/${encodeURIComponent(u)}?y=${encodeURIComponent(y)}`
+    }
+
+    const res = await fetchWithTimeout(url, 10000)
+    const data = await res.json()
+    if (!res.ok) throw new Error(data?.error || 'request_failed')
+    setCached(u, y, data)
+    return data
+  }
+
+  async function renderCalendar(root) {
+    const username = root.dataset.username
+    const year = root.dataset.year || 'last'
+    const endpoint = root.dataset.endpoint || ''
+
+    const statusEl = root.querySelector('[data-gh-calendar-status]')
+    const svgHost = root.querySelector('[data-gh-calendar-svg]')
+    const footerEl = root.querySelector('[data-gh-calendar-footer]')
+
+    const profileUrl = `https://github.com/${encodeURIComponent(username)}`
+
+    try {
+      statusEl.textContent = '贡献日历加载中…'
+      const data = await loadData(username, year, endpoint)
+
+      const activities = Array.isArray(data.contributions) ? data.contributions : []
+      if (activities.length === 0) throw new Error('empty_contributions')
+
+      const maxLevel = 4
+      const blockMargin = 4
+      const labelMargin = 8
+      const blockRadius = 2
+      const blockSize = 12
+      const fontSize = 14
+      const hideColorLegend = false
+      const hideMonthLabels = false
+      const hideTotalCount = false
+      const weekStart = 0
+
+      const labelHeight = hideMonthLabels ? 0 : fontSize + labelMargin
+      const weeks = groupByWeeks(activities, weekStart)
+      const width = weeks.length * (blockSize + blockMargin) - blockMargin
+      const height = labelHeight + (blockSize + blockMargin) * 7 - blockMargin
+
+      const colors = calcColorScale(
+        'var(--theme-background)',
+        'var(--theme-accent)',
+        maxLevel + 1,
+      )
+
+      let svg = `<svg class="block visible" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`
+      if (!hideMonthLabels) {
+        svg += '<g>'
+        for (const { label, weekIndex } of getMonthLabels(weeks, MONTHS)) {
+          svg += `<text x="${(blockSize + blockMargin) * weekIndex}" y="0" dominant-baseline="hanging" fill="currentColor">${label}</text>`
+        }
+        svg += '</g>'
+      }
+
+      for (let weekIndex = 0; weekIndex < weeks.length; weekIndex++) {
+        const week = weeks[weekIndex]
+        svg += `<g transform="translate(${(blockSize + blockMargin) * weekIndex}, 0)">`
+        for (let dayIndex = 0; dayIndex < week.length; dayIndex++) {
+          const activity = week[dayIndex]
+          if (!activity) continue
+          const y = labelHeight + (blockSize + blockMargin) * dayIndex
+          const fill = colors[activity.level] || colors[0]
+          svg += `<rect class="stroke-foreground/10" x="0" y="${y}" width="${blockSize}" height="${blockSize}" rx="${blockRadius}" ry="${blockRadius}" fill="${fill}"></rect>`
+        }
+        svg += '</g>'
+      }
+      svg += '</svg>'
+
+      svgHost.innerHTML = svg
+      statusEl.textContent = ''
+
+      const activityYear = new Date(activities[0].date).getFullYear()
+      const totalCount = year === 'last' ? data.total?.lastYear : data.total?.[year]
+      const totalText = TOTAL_TPL.replace('{{count}}', String(totalCount ?? 0)).replace(
+        '{{year}}',
+        String(activityYear),
+      )
+
+      let footerHtml = ''
+      if (!(hideTotalCount && hideColorLegend)) {
+        if (!hideTotalCount) footerHtml += `<div>${totalText}</div>`
+        if (!hideColorLegend) {
+          footerHtml += `<div class="flex items-center gap-[3px]"><span class="mr-1.5">少</span>`
+          for (let level = 0; level <= maxLevel; level++) {
+            footerHtml += `<svg width="${blockSize}" height="${blockSize}" xmlns="http://www.w3.org/2000/svg"><rect class="stroke-foreground/10" width="${blockSize}" height="${blockSize}" fill="${colors[level]}" rx="${blockRadius}" ry="${blockRadius}"></rect></svg>`
+          }
+          footerHtml += `<span class="ml-1.5">多</span></div>`
+        }
+      }
+      footerEl.innerHTML = footerHtml
+    } catch (err) {
+      console.warn('[GitHubActivityCalendar] Client render failed:', err)
+      statusEl.innerHTML = `贡献日历加载失败，<a class="text-accent underline" href="${profileUrl}" target="_blank" rel="noreferrer">查看 GitHub 主页</a>`
+      svgHost.innerHTML = ''
+      footerEl.innerHTML = ''
+    }
+  }
+
+  const roots = document.querySelectorAll(
+    '[data-gh-activity-calendar]:not([data-gh-initialized])',
+  )
+  for (const root of roots) {
+    root.dataset.ghInitialized = '1'
+    renderCalendar(root)
+  }
+</script>

@@ -214,6 +214,19 @@ export type GitHubCardsConfig = {
   cacheTtlMs?: number
 }
 
+export type GitHubActivityCalendarConfig = {
+  /** Set to false to disable the calendar widget site-wide. */
+  enabled?: boolean
+  /**
+   * Proxy endpoint to fetch contribution JSON from.
+   * Recommended to use your own edge/worker + CDN cache for better latency in mainland China.
+   * Example: https://api.example.com/github-activity
+   */
+  endpoint?: string
+  /** LocalStorage cache TTL for client-side fetches (ms). */
+  cacheTtlMs?: number
+}
+
 export interface SiteConfig {
   site: string
   font: string
@@ -229,6 +242,7 @@ export interface SiteConfig {
   navLinks: NavLink[]
   likes?: LikesConfig
   githubCards?: GitHubCardsConfig
+  githubActivityCalendar?: GitHubActivityCalendarConfig
   giscus: GiscusConfig | undefined
   characters: Record<string, string>
 }

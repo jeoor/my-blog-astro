@@ -206,6 +206,16 @@ const config: SiteConfig = {
     apiBase: 'https://api.github.com',
     cacheTtlMs: 1000 * 60 * 60 * 24, // 24h
   },
+  // GitHub contribution calendar (homepage).
+  // Recommended: point `endpoint` to your own edge/worker URL with caching,
+  // then put that domain behind EdgeOne CDN for fast access in mainland China.
+  githubActivityCalendar: {
+    enabled: true,
+    // Example: 'https://<your-worker-domain>/github-activity'
+    // If empty, the client falls back to the public upstream API.
+    endpoint: '',
+    cacheTtlMs: 1000 * 60 * 60 * 6, // 6h
+  },
   // Configuration for Giscus comments.
   // To set up Giscus, follow the instructions at https://giscus.app/
   // You'll need a GitHub repository with discussions enabled and the Giscus app installed.
