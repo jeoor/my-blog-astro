@@ -9,6 +9,10 @@
 
 - `GET /github-activity?u=<username>&y=<year|last>`：获取贡献日历 JSON（带边缘缓存 + CORS）
 
+> Cloudflare Pages 说明：如果你的博客部署在 Cloudflare Pages，推荐直接使用同域 Pages Functions（见 `functions/github-activity.ts`），
+> 并在 `src/site.config.ts` 中保持默认 `githubActivityCalendar.endpoint = '/github-activity'`。
+> 这样无需额外部署 Worker，也避免跨域与额外域名配置。
+
 ## 部署
 
 1. 安装 wrangler（全局或项目内均可）
@@ -33,7 +37,10 @@ wrangler deploy
 
 如果你想加速首页的 GitHub 贡献日历（大陆访问更快），可以把：
 
-- `githubActivityCalendar.endpoint=https://<你的worker域名>/github-activity`
+- Cloudflare Pages（推荐）：保持默认 `githubActivityCalendar.endpoint='/github-activity'`
+- 独立 Worker（可选）：`githubActivityCalendar.endpoint=https://<你的worker域名>/github-activity`
+
+如果你部署在不支持 Functions 的纯静态平台，也可以把 `githubActivityCalendar.endpoint` 留空，前端会回退到公共上游 API。
 
 本地开发时，可以填：
 

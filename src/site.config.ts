@@ -207,13 +207,13 @@ const config: SiteConfig = {
     cacheTtlMs: 1000 * 60 * 60 * 24, // 24h
   },
   // GitHub contribution calendar (homepage).
-  // Recommended: point `endpoint` to your own edge/worker URL with caching,
-  // then put that domain behind EdgeOne CDN for fast access in mainland China.
+  // Recommended (Cloudflare Pages): use a same-origin Pages Function endpoint
+  // (see `functions/github-activity.ts`) to get edge caching and avoid CORS.
   githubActivityCalendar: {
     enabled: true,
-    // Example: 'https://<your-worker-domain>/github-activity'
-    // If empty, the client falls back to the public upstream API.
-    endpoint: '',
+    // Example: '/github-activity' (Cloudflare Pages Functions)
+    // If empty or unavailable, the client falls back to the public upstream API.
+    endpoint: '/github-activity',
     cacheTtlMs: 1000 * 60 * 60 * 6, // 6h
   },
   // Configuration for Giscus comments.

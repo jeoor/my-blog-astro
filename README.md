@@ -21,7 +21,7 @@
 - **多主题选择模式**：选择三套（甚至全部 59 套）主题，让读者在对话框里自由切换；所有元素通过 CSS 变量实时联动换色。
 - **评论区（可选）**：可使用 GitHub Discussions + [Giscus](https://giscus.app) 作为评论系统，并与主题配色深度匹配。
 - **互动表情（本仓库增强）**：文章底部“点赞/表情反应”组件，支持多表情计数与“每天每篇每种表情一次”的限制（Cloudflare Worker + KV）。
-- **GitHub 活动日历（可选）**：首页可静态生成 GitHub 活动日历，并匹配当前主题。
+- **GitHub 活动日历（可选）**：首页可显示 GitHub 活动日历，并匹配当前主题（支持同域 Functions/Worker 代理 + 缓存）。
 - **Markdown 增强**：Admonitions、侧边固定目录 TOC、emoji shortcode、KaTeX、MDX、阅读时间估算等。
 - **RSS & Sitemap**：开箱即用，无需额外配置。
 - **社交链接**：页脚可配置常见平台链接（GitHub / Mastodon / Twitter / LinkedIn / Email / RSS 等）。
@@ -82,6 +82,15 @@ disablelike: true
 ```
 
 后端 Worker 的部署说明见 [worker/README.md](worker/README.md)。
+
+### GitHub 活动日历（GitHub Activity Calendar）
+
+配置位于 `src/site.config.ts` 的 `githubActivityCalendar`：
+
+- Cloudflare Pages（推荐）：保持默认 `githubActivityCalendar.endpoint='/github-activity'`。
+	- 对应 Pages Functions 实现在 `functions/github-activity.ts`，同域请求不需要额外 CORS 配置，并可在边缘缓存。
+- 独立 Worker（可选）：设置为 `https://<你的worker域名>/github-activity`。
+- 纯静态平台（无 Functions/Worker）：把 `endpoint` 留空，前端会回退到公共上游 API（但可能更慢/不稳定）。
 
 ## 📄 许可证
 
